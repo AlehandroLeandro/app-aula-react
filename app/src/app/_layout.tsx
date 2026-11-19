@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { SessaoProvider } from '../sessao/SessaoProvider';
 import { TemaProvider, useTema } from '../tema/tema';
 
 function Navegacao() {
@@ -25,7 +26,9 @@ function Navegacao() {
 export default function RootLayout() {
   return (
     <TemaProvider>
-      <Navegacao />
+      <SessaoProvider>
+        <Navegacao />
+      </SessaoProvider>
     </TemaProvider>
   );
 }

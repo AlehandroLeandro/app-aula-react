@@ -1,18 +1,17 @@
-import { StyleSheet, Text } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTema } from '../../tema/tema';
+import { router } from 'expo-router';
+import { FormularioConta } from '../../componentes/FormularioConta';
+import { useSessao } from '../../sessao/SessaoProvider';
 
 export default function CadastroScreen() {
-  const { cores } = useTema();
-
+  const { cadastrar } = useSessao();
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: cores.fundo }]}>
-      <Text accessibilityRole="header" style={[styles.title, { color: cores.texto }]}>Cadastro</Text>
-    </SafeAreaView>
+    <FormularioConta
+      titulo="Cadastro"
+      botao="Criar conta"
+      linkTexto="Já tem conta? Entre"
+      linkDestino="/login"
+      enviar={cadastrar}
+      aoConcluir={() => router.replace('/')}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24 },
-  title: { fontSize: 24, fontWeight: '700' },
-});
