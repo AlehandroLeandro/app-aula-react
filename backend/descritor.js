@@ -1,7 +1,7 @@
 const { GoogleGenAI } = require('@google/genai');
 
 const PROMPT = 'Descreva em português do Brasil, em 2 a 4 frases, o que aparece nesta imagem. Responda só com o texto da descrição, sem markdown.';
-const TEMPO_LIMITE_MS = 30_000;
+const TEMPO_LIMITE_MS = 60_000;
 
 let clientePadrao;
 function obterCliente() {
@@ -19,7 +19,7 @@ async function descrever(bytes, tipo, { cliente = obterCliente(), timeoutMs = TE
   });
   try {
     const chamada = cliente.models.generateContent({
-      model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+      model: process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite',
       contents: [{ role: 'user', parts: [
         { inlineData: { mimeType: tipo, data: Buffer.from(bytes).toString('base64') } },
         { text: PROMPT },

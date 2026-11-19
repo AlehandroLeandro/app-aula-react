@@ -145,7 +145,7 @@ test('descritor: usa o prompt do contrato, o modelo padrão e apara o texto', as
   const cliente = { models: { generateContent: async (p) => { recebido = p; return { text: '  Texto.\n' }; } } };
   delete process.env.GEMINI_MODEL;
   assert.strictEqual(await descrever(PNG, 'image/png', { cliente }), 'Texto.');
-  assert.strictEqual(recebido.model, 'gemini-2.5-flash');
+  assert.strictEqual(recebido.model, 'gemini-3.5-flash-lite');
   const partes = recebido.contents[0].parts;
   assert.strictEqual(partes[0].inlineData.mimeType, 'image/png');
   assert.strictEqual(partes[0].inlineData.data, PNG.toString('base64'));

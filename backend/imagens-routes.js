@@ -49,7 +49,10 @@ function imagensRoutes({ db, jwtSecret, descritor, uploadsDir }) {
     let descricao;
     try {
       descricao = await descritor(bytes, formato.tipo);
-    } catch {
+    } catch (e) {
+      const chave = process.env.GEMINI_API_KEY;
+      const msg = String(e?.message ?? e);
+      console.error('Falha ao gerar a Descrição:', chave ? msg.split(chave).join('[chave]') : msg);
       descricao = '';
     }
     descricao = typeof descricao === 'string' ? descricao.trim() : '';
