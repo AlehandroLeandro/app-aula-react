@@ -4,7 +4,7 @@ App de celular (Expo / React Native) em que o Usuário cria uma conta, tira uma 
 
 ## Pré-requisitos
 
-- Node.js 22.5 ou superior (testado com 22.22) e npm.
+- Node.js 22.13 ou superior (testado com 22.22) e npm.
 - Expo Go instalado no celular (com câmera).
 - Uma conta Google, para criar a chave da API do Gemini.
 - Celular e computador na mesma rede Wi-Fi.
@@ -79,7 +79,7 @@ O `smoke` usa `SMOKE_API_URL` como base (padrão `http://localhost:3000`); suba 
 | 0:00 | Abrir o app, criar conta / entrar |
 | 0:15 | Aba de envio: tirar uma foto com a câmera |
 | 0:30 | Aguardar e mostrar a Descrição gerada |
-| 0:45 | Favoritar a Imagem (estrela) |
+| 0:40 | Depois do envio, ir à aba "Minhas imagens" (ou abrir "Ver detalhes") e tocar na estrela do cartão para favoritar |
 | 0:55 | Abrir a aba Favoritos e mostrar a Imagem |
 | 1:05 | Em Configurações, trocar o tema para escuro |
 | 1:10 | Fechar o app por completo e abrir de novo |
