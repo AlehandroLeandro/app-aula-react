@@ -48,7 +48,8 @@ it('mostra o indicador enquanto carrega e depois a lista com miniatura, data, Fa
   expect(await screen.findByText(cafe.descricao)).toBeOnTheScreen();
   expect(screen.getByText(cachorro.descricao)).toBeOnTheScreen();
   expect(screen.getAllByText('18/11/2026 14:03')).toHaveLength(2);
-  expect(screen.getAllByLabelText('Favorita')).toHaveLength(1);
+  expect(screen.getAllByLabelText('Desmarcar como Favorita')).toHaveLength(1);
+  expect(screen.getAllByLabelText('Marcar como Favorita')).toHaveLength(1);
   expect(screen.getByText(cafe.descricao).props.numberOfLines).toBe(2);
   const miniatura = screen.getAllByLabelText('Miniatura da imagem')[0];
   expect(miniatura.props.source).toEqual({

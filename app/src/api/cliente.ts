@@ -34,7 +34,7 @@ export function definirToken(novo: string | null) {
 
 type Opcoes = { corpo?: unknown; multipart?: FormData; tempoMs?: number };
 
-async function requisicao<T>(metodo: 'GET' | 'POST' | 'DELETE', caminho: string, { corpo, multipart, tempoMs }: Opcoes = {}): Promise<T> {
+async function requisicao<T>(metodo: 'GET' | 'POST' | 'PUT' | 'DELETE', caminho: string, { corpo, multipart, tempoMs }: Opcoes = {}): Promise<T> {
   const base = process.env.EXPO_PUBLIC_API_URL ?? '';
   const headers: Record<string, string> = {};
   // No multipart o Content-Type fica de fora: o fetch põe o boundary sozinho.
@@ -107,4 +107,8 @@ export function obterImagem(id: number | string) {
 // Responde 204 sem corpo.
 export async function removerImagem(id: number | string): Promise<void> {
   await requisicao<null>('DELETE', `/imagens/${id}`);
+}
+
+export function definirFavorita(id: number | string, favorita: boolean) {
+  return requisicao<ImagemApi>('PUT', `/imagens/${id}/favorita`, { corpo: { favorita } });
 }

@@ -11,6 +11,8 @@ type Imagens = {
   recarregar: () => Promise<void>;
   adicionar: (nova: ImagemApi) => void;
   remover: (id: number) => void;
+  erroFavorita: string | null;
+  alternarFavorita: (id: number, favorita: boolean) => Promise<void>;
 };
 
 const Contexto = createContext<Imagens | null>(null);
@@ -20,6 +22,7 @@ export function ImagensProvider({ children }: { children: ReactNode }) {
   const idUsuario = usuario?.id ?? null;
   const [imagens, setImagens] = useState<ImagemApi[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [erroFavorita, setErroFavorita] = useState<string | null>(null);
   const [atualizando, setAtualizando] = useState(false);
   // Respostas de uma sessão anterior (ou de uma carga já substituída) são descartadas.
   const geracao = useRef(0);
@@ -43,6 +46,7 @@ export function ImagensProvider({ children }: { children: ReactNode }) {
       geracao.current++;
       setImagens(null);
       setErro(null);
+      setErroFavorita(null);
       setAtualizando(false);
       return;
     }
@@ -55,9 +59,24 @@ export function ImagensProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const marcar = (id: number, favorita: boolean) =>
+    setImagens((atual) => (atual ? atual.map((i) => (i.id === id ? { ...i, favorita } : i)) : atual));
+
+  // Otimista: troca antes da chamada e desfaz se o servidor falhar.
+  const alternarFavorita = useCallback(async (id: number, favorita: boolean) => {
+    setErroFavorita(null);
+    marcar(id, favorita);
+    try {
+      await api.definirFavorita(id, favorita);
+    } catch (e) {
+      marcar(id, !favorita);
+      setErroFavorita(e instanceof api.ErroApi ? e.message : 'Algo deu errado. Tente novamente.');
+    }
+  }, []);
+
   const valor = useMemo(
-    () => ({ imagens, erro, atualizando, recarregar, adicionar, remover }),
-    [imagens, erro, atualizando, recarregar, adicionar, remover],
+    () => ({ imagens, erro, atualizando, recarregar, adicionar, remover, erroFavorita, alternarFavorita }),
+    [imagens, erro, atualizando, recarregar, adicionar, remover, erroFavorita, alternarFavorita],
   );
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
 }

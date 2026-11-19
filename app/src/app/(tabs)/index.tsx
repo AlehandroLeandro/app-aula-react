@@ -16,7 +16,7 @@ import { useTema } from '../../tema/tema';
 export default function MinhasImagensScreen() {
   const { cores } = useTema();
   const { token } = useSessao();
-  const { imagens, erro, atualizando, recarregar } = useImagens();
+  const { imagens, erro, atualizando, recarregar, erroFavorita, alternarFavorita } = useImagens();
   const [busca, setBusca] = useState('');
 
   const termo = busca.trim();
@@ -45,6 +45,7 @@ export default function MinhasImagensScreen() {
       {titulo}
       {imagens.length > 0 ? <CampoTexto rotulo="Buscar" value={busca} onChangeText={setBusca} /> : null}
       {erro ? <Text accessibilityRole="alert" style={[styles.aviso, { color: cores.erro }]}>{erro}</Text> : null}
+      {erroFavorita ? <Text accessibilityRole="alert" style={[styles.aviso, { color: cores.erro }]}>{erroFavorita}</Text> : null}
       <FlatList
         testID="lista-imagens"
         data={visiveis}
@@ -58,6 +59,7 @@ export default function MinhasImagensScreen() {
             descricao={item.descricao}
             data={formatarData(item.criadaEm)}
             favorita={item.favorita}
+            onAlternarFavorita={() => void alternarFavorita(item.id, !item.favorita)}
             onPress={() => router.push(`/item/${item.id}`)}
           />
         )}

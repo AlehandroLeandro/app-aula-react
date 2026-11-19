@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ErroApi, obterImagem, removerImagem, type ImagemApi } from '../../api/cliente';
 import { BotaoGrande } from '../../componentes/BotaoGrande';
 import { Carregando } from '../../componentes/Carregando';
+import { EstrelaFavorita } from '../../componentes/EstrelaFavorita';
 import { MensagemErro } from '../../componentes/MensagemErro';
 import { fonteDaFoto, formatarData } from '../../imagens/formato';
 import { useImagens } from '../../imagens/ImagensProvider';
@@ -22,7 +23,7 @@ const voltar = () => (router.canGoBack() ? router.back() : router.replace('/'));
 export default function DetalhesDaImagemScreen() {
   const { cores } = useTema();
   const { usuario, token } = useSessao();
-  const { remover } = useImagens();
+  const { imagens, remover, erroFavorita, alternarFavorita } = useImagens();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [estado, setEstado] = useState<Estado>({ tipo: 'carregando' });
   const [tentativa, setTentativa] = useState(0);
@@ -77,6 +78,8 @@ export default function DetalhesDaImagemScreen() {
       );
     }
     const { imagem } = estado;
+    // O provedor é a fonte da marca, para lista, detalhes e Favoritos concordarem.
+    const favorita = imagens?.find((i) => i.id === imagem.id)?.favorita ?? imagem.favorita;
     return (
       <ScrollView contentContainerStyle={styles.conteudo}>
         <Image
@@ -86,7 +89,11 @@ export default function DetalhesDaImagemScreen() {
           resizeMode="contain"
         />
         <Text style={[styles.descricao, { color: cores.texto }]}>{imagem.descricao}</Text>
-        <Text style={{ color: cores.textoSecundario }}>{formatarData(imagem.criadaEm)}</Text>
+        <View style={styles.linha}>
+          <Text style={{ color: cores.textoSecundario }}>{formatarData(imagem.criadaEm)}</Text>
+          <EstrelaFavorita favorita={favorita} onAlternar={() => void alternarFavorita(imagem.id, !favorita)} />
+        </View>
+        {erroFavorita ? <Text accessibilityRole="alert" style={[styles.mensagem, { color: cores.erro }]}>{erroFavorita}</Text> : null}
         {erroRemover ? <Text accessibilityRole="alert" style={[styles.mensagem, { color: cores.erro }]}>{erroRemover}</Text> : null}
         <BotaoGrande
           titulo="Remover"
@@ -113,4 +120,5 @@ const styles = StyleSheet.create({
   foto: { width: '100%', aspectRatio: 1, borderRadius: 12 },
   descricao: { fontSize: 16, lineHeight: 24 },
   mensagem: { fontSize: 16 },
+  linha: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
 });
