@@ -71,6 +71,38 @@ function imagensRoutes({ db, jwtSecret, descritor, uploadsDir }) {
     }
   });
 
+  const auth = exigirToken({ db, jwtSecret });
+
+  // Linha do dono ou 404 (inexistente, de outro Usuário ou id não numérico).
+  const linhaDoDono = (req) => {
+    const linha = /^\d+$/.test(req.params.id)
+      ? db.prepare('SELECT * FROM imagens WHERE id = ? AND usuario_id = ?').get(Number(req.params.id), req.usuario.id)
+      : undefined;
+    if (!linha) throw new ErroApi(404, 'NAO_ENCONTRADA', 'Imagem não encontrada.');
+    return linha;
+  };
+
+  router.get('/', auth, (req, res) => {
+    const linhas = db.prepare('SELECT * FROM imagens WHERE usuario_id = ? ORDER BY criada_em DESC, id DESC').all(req.usuario.id);
+    res.json(linhas.map(imagemDaLinha));
+  });
+
+  router.get('/:id', auth, (req, res) => res.json(imagemDaLinha(linhaDoDono(req))));
+
+  router.get('/:id/arquivo', auth, (req, res, next) => {
+    const linha = linhaDoDono(req);
+    res.type(linha.tipo).sendFile(path.join(uploadsDir, linha.caminho), (err) => {
+      if (err && !res.headersSent) next(new ErroApi(404, 'NAO_ENCONTRADA', 'Imagem não encontrada.'));
+    });
+  });
+
+  router.delete('/:id', auth, (req, res) => {
+    const linha = linhaDoDono(req);
+    db.prepare('DELETE FROM imagens WHERE id = ?').run(linha.id);
+    fs.rmSync(path.join(uploadsDir, linha.caminho), { force: true });
+    res.status(204).end();
+  });
+
   return router;
 }
 
