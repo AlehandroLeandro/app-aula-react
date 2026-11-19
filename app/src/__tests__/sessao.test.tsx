@@ -4,7 +4,7 @@ import * as api from '../api/cliente';
 import { ErroApi } from '../api/cliente';
 import { salvarSessao, SESSAO } from '../testes/sessao';
 
-jest.mock('../api/cliente', () => ({ ...jest.requireActual('../api/cliente'), eu: jest.fn(), definirToken: jest.fn() }));
+jest.mock('../api/cliente', () => ({ ...jest.requireActual('../api/cliente'), eu: jest.fn(), definirToken: jest.fn(), listarImagens: jest.fn().mockResolvedValue([]) }));
 
 const euFalso = jest.mocked(api.eu);
 const appDir = './src/app';

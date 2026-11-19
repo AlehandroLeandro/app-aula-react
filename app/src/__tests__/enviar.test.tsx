@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
+import { act, fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
 import * as ImagePicker from 'expo-image-picker';
 
 import * as api from '../api/cliente';
@@ -11,6 +11,8 @@ jest.mock('../api/cliente', () => ({
   eu: jest.fn(),
   definirToken: jest.fn(),
   enviarImagem: jest.fn(),
+  obterImagem: jest.fn(() => new Promise(() => {})),
+  listarImagens: jest.fn(),
 }));
 jest.mock('expo-image-picker', () => ({
   requestCameraPermissionsAsync: jest.fn(),
@@ -36,6 +38,7 @@ beforeEach(async () => {
   jest.clearAllMocks();
   await salvarSessao();
   jest.mocked(api.eu).mockResolvedValue({ usuario: SESSAO.usuario });
+  jest.mocked(api.listarImagens).mockResolvedValue([]);
   picker.requestCameraPermissionsAsync.mockResolvedValue(concedida);
   picker.requestMediaLibraryPermissionsAsync.mockResolvedValue(concedida);
   picker.launchCameraAsync.mockResolvedValue(escolhida);
@@ -93,8 +96,7 @@ it('mostra carregamento, não reenvia e exibe a Descrição com Ver detalhes', a
   expect(await screen.findByText('Um cachorro caramelo.')).toBeOnTheScreen();
   expect(screen.getByLabelText('Prévia da foto')).toBeOnTheScreen();
   await tocar('Ver detalhes');
-  expect(await screen.findByRole('header', { name: 'Detalhes da Imagem' })).toBeOnTheScreen();
-  expect(screen.getByText('12')).toBeOnTheScreen();
+  await waitFor(() => expect(api.obterImagem).toHaveBeenCalledWith('12'));
 });
 
 it('Enviar outra volta ao estado inicial', async () => {
@@ -122,4 +124,19 @@ it('erro mostra a mensagem e Tentar de novo reenvia a mesma foto', async () => {
   expect(await screen.findByText('Um cachorro caramelo.')).toBeOnTheScreen();
   expect(enviarFalso).toHaveBeenCalledTimes(2);
   expect(enviarFalso.mock.calls[1][0]).toEqual(enviarFalso.mock.calls[0][0]);
+});
+
+it('a Imagem enviada aparece no topo de Minhas imagens', async () => {
+  const antiga = { ...imagem, id: 5, descricao: 'Imagem antiga.' };
+  jest.mocked(api.listarImagens).mockResolvedValue([antiga]);
+  enviarFalso.mockResolvedValue(imagem);
+  await abrir();
+  await tocar('Escolher da galeria');
+  await screen.findByLabelText('Prévia da foto');
+  await tocar('Descrever');
+  await screen.findByText('Ver detalhes');
+  await act(async () => router.navigate('/'));
+  const cartoes = await screen.findAllByLabelText(/^Abrir imagem:/);
+  expect(cartoes.map((c) => c.props.accessibilityLabel)).toEqual(['Abrir imagem: Um cachorro caramelo.', 'Abrir imagem: Imagem antiga.']);
+  expect(api.listarImagens).toHaveBeenCalledTimes(1);
 });

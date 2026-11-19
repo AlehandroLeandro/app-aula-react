@@ -34,7 +34,7 @@ export function definirToken(novo: string | null) {
 
 type Opcoes = { corpo?: unknown; multipart?: FormData; tempoMs?: number };
 
-async function requisicao<T>(metodo: 'GET' | 'POST', caminho: string, { corpo, multipart, tempoMs }: Opcoes = {}): Promise<T> {
+async function requisicao<T>(metodo: 'GET' | 'POST' | 'DELETE', caminho: string, { corpo, multipart, tempoMs }: Opcoes = {}): Promise<T> {
   const base = process.env.EXPO_PUBLIC_API_URL ?? '';
   const headers: Record<string, string> = {};
   // No multipart o Content-Type fica de fora: o fetch põe o boundary sozinho.
@@ -59,10 +59,13 @@ async function requisicao<T>(metodo: 'GET' | 'POST', caminho: string, { corpo, m
   }
 
   let dados: unknown = null;
-  try {
-    dados = await resposta.json();
-  } catch {
-    // corpo vazio ou que não é JSON
+  // 204 não tem corpo; nos demais casos um corpo vazio ou que não é JSON também vira null.
+  if (resposta.status !== 204) {
+    try {
+      dados = await resposta.json();
+    } catch {
+      // corpo vazio ou que não é JSON
+    }
   }
 
   if (!resposta.ok) {
@@ -91,4 +94,17 @@ export function enviarImagem(foto: FotoParaEnviar) {
   // No React Native o arquivo é descrito por { uri, name, type }.
   formulario.append('foto', { uri: foto.uri, name: foto.nome, type: foto.tipo } as unknown as Blob);
   return requisicao<ImagemApi>('POST', '/imagens', { multipart: formulario, tempoMs: TEMPO_ENVIO_MS });
+}
+
+export function listarImagens() {
+  return requisicao<ImagemApi[]>('GET', '/imagens');
+}
+
+export function obterImagem(id: number | string) {
+  return requisicao<ImagemApi>('GET', `/imagens/${id}`);
+}
+
+// Responde 204 sem corpo.
+export async function removerImagem(id: number | string): Promise<void> {
+  await requisicao<null>('DELETE', `/imagens/${id}`);
 }

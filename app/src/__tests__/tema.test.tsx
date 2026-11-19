@@ -6,7 +6,7 @@ import { TemaProvider } from '../tema/tema';
 import * as api from '../api/cliente';
 import { salvarSessao, SESSAO } from '../testes/sessao';
 
-jest.mock('../api/cliente', () => ({ ...jest.requireActual('../api/cliente'), eu: jest.fn(), definirToken: jest.fn() }));
+jest.mock('../api/cliente', () => ({ ...jest.requireActual('../api/cliente'), eu: jest.fn(), definirToken: jest.fn(), listarImagens: jest.fn().mockResolvedValue([]) }));
 
 const appDir = './src/app';
 const CHAVE = '@descritor/tema';
@@ -38,7 +38,7 @@ describe('tema', () => {
 
   it('Minhas imagens mostra o estado vazio', async () => {
     await renderRouter(appDir, { initialUrl: '/' });
-    expect(await screen.findByText('Você ainda não enviou nenhuma imagem.')).toBeOnTheScreen();
+    expect(await screen.findByText('Você ainda não enviou nenhuma Imagem')).toBeOnTheScreen();
   });
 
   it('trocar o tema em Configurações grava a escolha e um novo render lê o valor salvo', async () => {

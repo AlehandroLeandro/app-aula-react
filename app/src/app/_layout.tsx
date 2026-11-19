@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Carregando } from '../componentes/Carregando';
 import { MensagemErro } from '../componentes/MensagemErro';
+import { ImagensProvider } from '../imagens/ImagensProvider';
 import { SessaoProvider, useSessao } from '../sessao/SessaoProvider';
 import { TemaProvider, useTema } from '../tema/tema';
 
@@ -34,7 +35,9 @@ export default function RootLayout() {
   return (
     <TemaProvider>
       <SessaoProvider>
-        <Navegacao />
+        <ImagensProvider>
+          <Navegacao />
+        </ImagensProvider>
       </SessaoProvider>
     </TemaProvider>
   );

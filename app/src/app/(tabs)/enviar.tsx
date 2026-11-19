@@ -5,6 +5,7 @@ import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { enviarImagem, ErroApi, type FotoParaEnviar, type ImagemApi } from '../../api/cliente';
 import { BotaoGrande } from '../../componentes/BotaoGrande';
+import { useImagens } from '../../imagens/ImagensProvider';
 import { useTema } from '../../tema/tema';
 
 type Origem = 'camera' | 'galeria';
@@ -18,6 +19,7 @@ const OPCOES: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality
 
 export default function EnviarScreen() {
   const { cores } = useTema();
+  const { adicionar } = useImagens();
   const [foto, setFoto] = useState<FotoParaEnviar | null>(null);
   const [estado, setEstado] = useState<Estado>('escolhendo');
   const [imagem, setImagem] = useState<ImagemApi | null>(null);
@@ -49,7 +51,9 @@ export default function EnviarScreen() {
     setErro(null);
     setEstado('enviando');
     try {
-      setImagem(await enviarImagem(foto));
+      const criada = await enviarImagem(foto);
+      adicionar(criada);
+      setImagem(criada);
       setEstado('concluido');
     } catch (e) {
       setErro(e instanceof ErroApi ? e.message : 'Algo deu errado. Tente novamente.');

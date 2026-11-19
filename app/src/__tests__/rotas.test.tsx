@@ -1,11 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
+import { act, fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
 
 import * as api from '../api/cliente';
 import { salvarSessao, SESSAO } from '../testes/sessao';
 
-jest.mock('../api/cliente', () => ({ ...jest.requireActual('../api/cliente'), eu: jest.fn(), definirToken: jest.fn() }));
+jest.mock('../api/cliente', () => ({ ...jest.requireActual('../api/cliente'), eu: jest.fn(), definirToken: jest.fn(), listarImagens: jest.fn().mockResolvedValue([]), obterImagem: jest.fn(() => new Promise(() => {})) }));
 
 const appDir = './src/app';
 
@@ -37,8 +37,7 @@ describe('navegação', () => {
   it('abre os detalhes com o id da rota', async () => {
     await renderRouter(appDir, { initialUrl: '/' });
     await act(async () => router.push('/item/42'));
-    expect(screen.getByRole('header', { name: 'Detalhes da Imagem' })).toBeOnTheScreen();
-    expect(screen.getByText('42')).toBeOnTheScreen();
+    await waitFor(() => expect(api.obterImagem).toHaveBeenCalledWith('42'));
   });
 
   it('login não mostra a barra de abas', async () => {

@@ -6,7 +6,7 @@ import * as api from '../api/cliente';
 // Cliente falso que segue o contrato (mesmos nomes de função e formato de erro).
 jest.mock('../api/cliente', () => {
   const real = jest.requireActual('../api/cliente');
-  return { ...real, entrar: jest.fn(), cadastrar: jest.fn(), definirToken: jest.fn() };
+  return { ...real, entrar: jest.fn(), cadastrar: jest.fn(), definirToken: jest.fn(), listarImagens: jest.fn().mockResolvedValue([]) };
 });
 
 const entrarFalso = jest.mocked(api.entrar);

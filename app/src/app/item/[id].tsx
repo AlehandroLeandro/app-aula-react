@@ -1,24 +1,116 @@
-import { Redirect, useLocalSearchParams } from 'expo-router';
-import { StyleSheet, Text } from 'react-native';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ErroApi, obterImagem, removerImagem, type ImagemApi } from '../../api/cliente';
+import { BotaoGrande } from '../../componentes/BotaoGrande';
+import { Carregando } from '../../componentes/Carregando';
+import { MensagemErro } from '../../componentes/MensagemErro';
+import { fonteDaFoto, formatarData } from '../../imagens/formato';
+import { useImagens } from '../../imagens/ImagensProvider';
 import { useSessao } from '../../sessao/SessaoProvider';
 import { useTema } from '../../tema/tema';
 
+type Estado =
+  | { tipo: 'carregando' }
+  | { tipo: 'erro'; mensagem: string }
+  | { tipo: 'nao-encontrada' }
+  | { tipo: 'pronto'; imagem: ImagemApi };
+
+const voltar = () => (router.canGoBack() ? router.back() : router.replace('/'));
+
 export default function DetalhesDaImagemScreen() {
   const { cores } = useTema();
-  const { usuario } = useSessao();
+  const { usuario, token } = useSessao();
+  const { remover } = useImagens();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const [estado, setEstado] = useState<Estado>({ tipo: 'carregando' });
+  const [tentativa, setTentativa] = useState(0);
+  const [removendo, setRemovendo] = useState(false);
+  const [erroRemover, setErroRemover] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!usuario) return;
+    let ativo = true;
+    setEstado({ tipo: 'carregando' });
+    obterImagem(id)
+      .then((imagem) => ativo && setEstado({ tipo: 'pronto', imagem }))
+      .catch((e) => {
+        if (!ativo) return;
+        if (e instanceof ErroApi && e.codigo === 'NAO_ENCONTRADA') setEstado({ tipo: 'nao-encontrada' });
+        else setEstado({ tipo: 'erro', mensagem: e instanceof ErroApi ? e.message : 'Algo deu errado. Tente novamente.' });
+      });
+    return () => {
+      ativo = false;
+    };
+  }, [id, tentativa, usuario]);
+
+  const confirmarRemocao = useCallback(
+    async (imagem: ImagemApi) => {
+      setErroRemover(null);
+      setRemovendo(true);
+      try {
+        await removerImagem(imagem.id);
+        remover(imagem.id);
+        voltar();
+      } catch (e) {
+        setErroRemover(e instanceof ErroApi ? e.message : 'Algo deu errado. Tente novamente.');
+        setRemovendo(false);
+      }
+    },
+    [remover],
+  );
+
   if (!usuario) return <Redirect href="/login" />;
 
-  return (
-    <SafeAreaView style={[styles.container, { backgroundColor: cores.fundo }]}>
-      <Text accessibilityRole="header" style={[styles.title, { color: cores.texto }]}>Detalhes da Imagem</Text>
-      <Text style={{ color: cores.texto }}>{id}</Text>
-    </SafeAreaView>
-  );
+  const corpo = () => {
+    if (estado.tipo === 'carregando') return <Carregando />;
+    if (estado.tipo === 'erro') {
+      return <MensagemErro mensagem={estado.mensagem} onTentarDeNovo={() => setTentativa((n) => n + 1)} />;
+    }
+    if (estado.tipo === 'nao-encontrada') {
+      return (
+        <View style={styles.centro}>
+          <Text accessibilityRole="alert" style={[styles.mensagem, { color: cores.texto }]}>Imagem não encontrada</Text>
+          <BotaoGrande titulo="Voltar" onPress={voltar} />
+        </View>
+      );
+    }
+    const { imagem } = estado;
+    return (
+      <ScrollView contentContainerStyle={styles.conteudo}>
+        <Image
+          accessibilityLabel="Foto da Imagem"
+          source={fonteDaFoto(imagem, token)}
+          style={[styles.foto, { backgroundColor: cores.borda }]}
+          resizeMode="contain"
+        />
+        <Text style={[styles.descricao, { color: cores.texto }]}>{imagem.descricao}</Text>
+        <Text style={{ color: cores.textoSecundario }}>{formatarData(imagem.criadaEm)}</Text>
+        {erroRemover ? <Text accessibilityRole="alert" style={[styles.mensagem, { color: cores.erro }]}>{erroRemover}</Text> : null}
+        <BotaoGrande
+          titulo="Remover"
+          variante="secundario"
+          carregando={removendo}
+          onPress={() =>
+            Alert.alert('Remover esta Imagem?', 'Não dá para desfazer.', [
+              { text: 'Cancelar', style: 'cancel' },
+              { text: 'Remover', style: 'destructive', onPress: () => void confirmarRemocao(imagem) },
+            ])
+          }
+        />
+      </ScrollView>
+    );
+  };
+
+  return <SafeAreaView edges={['bottom']} style={[styles.container, { backgroundColor: cores.fundo }]}>{corpo()}</SafeAreaView>;
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24 },
-  title: { fontSize: 24, fontWeight: '700' },
+  container: { flex: 1 },
+  conteudo: { padding: 24, gap: 16 },
+  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 },
+  foto: { width: '100%', aspectRatio: 1, borderRadius: 12 },
+  descricao: { fontSize: 16, lineHeight: 24 },
+  mensagem: { fontSize: 16 },
 });
