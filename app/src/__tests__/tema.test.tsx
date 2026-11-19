@@ -3,12 +3,18 @@ import { fireEvent, renderRouter, screen } from 'expo-router/testing-library';
 import { MensagemErro } from '../componentes/MensagemErro';
 import { render } from '@testing-library/react-native';
 import { TemaProvider } from '../tema/tema';
+import * as api from '../api/cliente';
+import { salvarSessao, SESSAO } from '../testes/sessao';
+
+jest.mock('../api/cliente', () => ({ ...jest.requireActual('../api/cliente'), eu: jest.fn(), definirToken: jest.fn() }));
 
 const appDir = './src/app';
 const CHAVE = '@descritor/tema';
 
 beforeEach(async () => {
   await AsyncStorage.clear();
+  await salvarSessao();
+  jest.mocked(api.eu).mockResolvedValue({ usuario: SESSAO.usuario });
 });
 
 async function abrirConfiguracoes() {

@@ -1,8 +1,11 @@
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
+import { useSessao } from '../../sessao/SessaoProvider';
 import { useTema } from '../../tema/tema';
 
 export default function TabsLayout() {
   const { cores } = useTema();
+  const { usuario } = useSessao();
+  if (!usuario) return <Redirect href="/login" />;
   return (
     <Tabs
       screenOptions={{

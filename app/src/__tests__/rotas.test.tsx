@@ -1,9 +1,20 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
+
+import * as api from '../api/cliente';
+import { salvarSessao, SESSAO } from '../testes/sessao';
+
+jest.mock('../api/cliente', () => ({ ...jest.requireActual('../api/cliente'), eu: jest.fn(), definirToken: jest.fn() }));
 
 const appDir = './src/app';
 
 describe('navegação', () => {
+  beforeEach(async () => {
+    await salvarSessao();
+    jest.mocked(api.eu).mockResolvedValue({ usuario: SESSAO.usuario });
+  });
+
   it('troca entre abas pela barra de abas', async () => {
     await renderRouter(appDir, { initialUrl: '/' });
     expect(screen.getByRole('header', { name: 'Minhas imagens' })).toBeOnTheScreen();
@@ -31,6 +42,7 @@ describe('navegação', () => {
   });
 
   it('login não mostra a barra de abas', async () => {
+    await AsyncStorage.clear();
     await renderRouter(appDir, { initialUrl: '/login' });
     expect(screen.getByRole('header', { name: 'Login' })).toBeOnTheScreen();
     expect(screen.queryByLabelText(/, tab, \d of 4$/)).toBeNull();

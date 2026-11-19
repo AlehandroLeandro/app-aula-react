@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
 import { ErroApi } from '../api/cliente';
 import * as api from '../api/cliente';
@@ -19,7 +20,10 @@ async function preencher(nome: string, senha: string, botao: string) {
   await fireEvent.press(screen.getByRole('button', { name: botao }));
 }
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(async () => {
+  jest.clearAllMocks();
+  await AsyncStorage.clear();
+});
 
 describe('cadastro', () => {
   it('valida nome e senha antes de enviar', async () => {
@@ -43,6 +47,7 @@ describe('cadastro', () => {
     await preencher('  Alehandro ', 'senha1', 'Criar conta');
     expect(cadastrarFalso).toHaveBeenCalledWith('Alehandro', 'senha1');
     expect(await screen.findByRole('header', { name: 'Minhas imagens' })).toBeOnTheScreen();
+    expect(JSON.parse((await AsyncStorage.getItem('@descritor/sessao')) ?? 'null')).toEqual(ok);
   });
 });
 
@@ -70,6 +75,7 @@ describe('login', () => {
     await renderRouter(appDir, { initialUrl: '/login' });
     await preencher('Alehandro', 'senha1', 'Entrar');
     expect(await screen.findByRole('header', { name: 'Minhas imagens' })).toBeOnTheScreen();
+    expect(JSON.parse((await AsyncStorage.getItem('@descritor/sessao')) ?? 'null')).toEqual(ok);
   });
 
   it('liga ao cadastro e volta', async () => {
