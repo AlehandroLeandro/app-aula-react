@@ -1,4 +1,5 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useFonteNoWeb } from '../imagens/useFonteNoWeb';
 import { useTema } from '../tema/tema';
 import { EstrelaFavorita } from './EstrelaFavorita';
 
@@ -13,6 +14,7 @@ type Props = {
 
 export function CartaoImagem({ fonteMiniatura, descricao, data, favorita = false, onPress, onAlternarFavorita }: Props) {
   const { cores } = useTema();
+  const fonte = useFonteNoWeb(fonteMiniatura);
   return (
     <View style={styles.raiz}>
     <Pressable
@@ -27,7 +29,7 @@ export function CartaoImagem({ fonteMiniatura, descricao, data, favorita = false
     >
       <Image
         accessibilityLabel="Miniatura da imagem"
-        source={fonteMiniatura}
+        source={fonte}
         style={[styles.miniatura, { backgroundColor: cores.borda }]}
       />
       <View style={styles.corpo}>

@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 // Único módulo que fala com o backend. Nenhuma tela chama fetch diretamente.
 
 export type UsuarioApi = { id: number; nome: string };
@@ -89,10 +91,15 @@ export function eu() {
 }
 
 // Envia a foto (campo `foto`) e só responde depois da Descrição pronta; desiste em 60 s.
-export function enviarImagem(foto: FotoParaEnviar) {
+export async function enviarImagem(foto: FotoParaEnviar) {
   const formulario = new FormData();
-  // No React Native o arquivo é descrito por { uri, name, type }.
-  formulario.append('foto', { uri: foto.uri, name: foto.nome, type: foto.tipo } as unknown as Blob);
+  if (Platform.OS === 'web') {
+    // No navegador o arquivo é um Blob lido da uri.
+    formulario.append('foto', await (await fetch(foto.uri)).blob(), foto.nome);
+  } else {
+    // No React Native o arquivo é descrito por { uri, name, type }.
+    formulario.append('foto', { uri: foto.uri, name: foto.nome, type: foto.tipo } as unknown as Blob);
+  }
   return requisicao<ImagemApi>('POST', '/imagens', { multipart: formulario, tempoMs: TEMPO_ENVIO_MS });
 }
 

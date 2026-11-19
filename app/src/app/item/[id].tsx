@@ -1,13 +1,15 @@
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ErroApi, obterImagem, removerImagem, type ImagemApi } from '../../api/cliente';
 import { BotaoGrande } from '../../componentes/BotaoGrande';
 import { Carregando } from '../../componentes/Carregando';
+import { confirmar } from '../../componentes/confirmar';
 import { EstrelaFavorita } from '../../componentes/EstrelaFavorita';
 import { MensagemErro } from '../../componentes/MensagemErro';
 import { fonteDaFoto, formatarData } from '../../imagens/formato';
+import { useFonteNoWeb } from '../../imagens/useFonteNoWeb';
 import { useImagens } from '../../imagens/ImagensProvider';
 import { useSessao } from '../../sessao/SessaoProvider';
 import { useTema } from '../../tema/tema';
@@ -19,6 +21,17 @@ type Estado =
   | { tipo: 'pronto'; imagem: ImagemApi };
 
 const voltar = () => (router.canGoBack() ? router.back() : router.replace('/'));
+
+function FotoDaImagem({ fonte, fundo }: { fonte: { uri: string; headers?: Record<string, string> }; fundo: string }) {
+  return (
+    <Image
+      accessibilityLabel="Foto da Imagem"
+      source={useFonteNoWeb(fonte)}
+      style={[styles.foto, { backgroundColor: fundo }]}
+      resizeMode="contain"
+    />
+  );
+}
 
 export default function DetalhesDaImagemScreen() {
   const { cores } = useTema();
@@ -82,12 +95,7 @@ export default function DetalhesDaImagemScreen() {
     const favorita = imagens?.find((i) => i.id === imagem.id)?.favorita ?? imagem.favorita;
     return (
       <ScrollView contentContainerStyle={styles.conteudo}>
-        <Image
-          accessibilityLabel="Foto da Imagem"
-          source={fonteDaFoto(imagem, token)}
-          style={[styles.foto, { backgroundColor: cores.borda }]}
-          resizeMode="contain"
-        />
+        <FotoDaImagem fonte={fonteDaFoto(imagem, token)} fundo={cores.borda} />
         <Text style={[styles.descricao, { color: cores.texto }]}>{imagem.descricao}</Text>
         <View style={styles.linha}>
           <Text style={{ color: cores.textoSecundario }}>{formatarData(imagem.criadaEm)}</Text>
@@ -99,12 +107,11 @@ export default function DetalhesDaImagemScreen() {
           titulo="Remover"
           variante="secundario"
           carregando={removendo}
-          onPress={() =>
-            Alert.alert('Remover esta Imagem?', 'Não dá para desfazer.', [
-              { text: 'Cancelar', style: 'cancel' },
-              { text: 'Remover', style: 'destructive', onPress: () => void confirmarRemocao(imagem) },
-            ])
-          }
+          onPress={() => {
+            void confirmar('Remover esta Imagem?', 'Não dá para desfazer.', 'Remover').then((sim) => {
+              if (sim) void confirmarRemocao(imagem);
+            });
+          }}
         />
       </ScrollView>
     );
