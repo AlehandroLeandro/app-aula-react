@@ -13,6 +13,18 @@ function createApp({
   uploadsDir = process.env.UPLOADS_DIR || path.join(__dirname, 'uploads'),
 }) {
   const app = express();
+
+  // CORS para o Expo web. Auth é por Bearer token (sem cookie), então `*` é seguro.
+  app.use((req, res, next) => {
+    res.set({
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    });
+    if (req.method === 'OPTIONS') return res.sendStatus(204);
+    next();
+  });
+
   app.use(express.json());
 
   app.use('/auth', authRoutes({ db, jwtSecret }));
