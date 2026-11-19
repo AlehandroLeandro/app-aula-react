@@ -112,3 +112,14 @@ test('DELETE de outro Usuário, inexistente ou não numérico: 404 e nada apagad
   assert.strictEqual(fs.readdirSync(t.uploadsDir).length, 1);
   assert.strictEqual((await t.com('get', `/imagens/${img.id}`, t.ana)).status, 200);
 });
+
+test('arquivo: serve 200 mesmo com uploadsDir dentro de diretório oculto', async () => {
+  const uploadsDir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'oculto-')), '.oculto', 'uploads');
+  const db = abrirBanco(':memory:');
+  const app = createApp({ db, jwtSecret: 's', descritor: async () => 'Uma foto.', uploadsDir });
+  const token = (await request(app).post('/auth/cadastro').send({ nome: 'Ana', senha: '1234' })).body.token;
+  const img = (await request(app).post('/imagens').set('Authorization', `Bearer ${token}`)
+    .attach('foto', JPEG, { filename: 'f', contentType: 'image/jpeg' })).body;
+  const r = await request(app).get(img.urlArquivo).set('Authorization', `Bearer ${token}`);
+  assert.strictEqual(r.status, 200);
+});

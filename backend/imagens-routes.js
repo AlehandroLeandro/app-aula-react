@@ -91,7 +91,7 @@ function imagensRoutes({ db, jwtSecret, descritor, uploadsDir }) {
 
   router.get('/:id/arquivo', auth, (req, res, next) => {
     const linha = linhaDoDono(req);
-    res.type(linha.tipo).sendFile(path.join(uploadsDir, linha.caminho), (err) => {
+    res.type(linha.tipo).sendFile(path.join(uploadsDir, linha.caminho), { dotfiles: 'allow' }, (err) => {
       if (err && !res.headersSent) next(new ErroApi(404, 'NAO_ENCONTRADA', 'Imagem não encontrada.'));
     });
   });
