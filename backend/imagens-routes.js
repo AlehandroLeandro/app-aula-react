@@ -96,6 +96,14 @@ function imagensRoutes({ db, jwtSecret, descritor, uploadsDir }) {
     });
   });
 
+  router.put('/:id/favorita', auth, (req, res) => {
+    const linha = linhaDoDono(req);
+    const favorita = req.body?.favorita;
+    if (typeof favorita !== 'boolean') throw new ErroApi(400, 'DADOS_INVALIDOS', 'Envie "favorita" como true ou false.');
+    db.prepare('UPDATE imagens SET favorita = ? WHERE id = ?').run(favorita ? 1 : 0, linha.id);
+    res.json(imagemDaLinha({ ...linha, favorita }));
+  });
+
   router.delete('/:id', auth, (req, res) => {
     const linha = linhaDoDono(req);
     db.prepare('DELETE FROM imagens WHERE id = ?').run(linha.id);
