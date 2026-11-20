@@ -1,3 +1,4 @@
+import { File } from 'expo-file-system';
 import { router } from 'expo-router';
 import { act, fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
 import { Alert, type AlertButton } from 'react-native';
@@ -43,10 +44,15 @@ it('carrega pelo id da rota e mostra foto com token, Descrição completa e data
   expect(await screen.findByText(imagem.descricao)).toBeOnTheScreen();
   expect(obterFalso).toHaveBeenCalledWith('12');
   expect(screen.getByText('18/11/2026 14:03')).toBeOnTheScreen();
-  expect(screen.getByLabelText('Foto da Imagem').props.source).toEqual({
-    uri: 'http://api.teste/imagens/12/arquivo',
-    headers: { Authorization: 'Bearer tok' },
+  expect(await waitFor(() => screen.getByLabelText("Foto da Imagem").props.source.uri)).toContain("file:///cache/");
+  expect(screen.getByLabelText("Foto da Imagem").props.source).toEqual({
+    uri: expect.stringContaining('file:///cache/'),
   });
+  expect(File.downloadFileAsync).toHaveBeenCalledWith(
+    'http://api.teste/imagens/12/arquivo',
+    expect.anything(),
+    expect.objectContaining({ headers: { Authorization: 'Bearer tok' } }),
+  );
 });
 
 it('mostra o indicador e, em falha, a mensagem com Tentar de novo', async () => {

@@ -1,3 +1,4 @@
+import { File } from 'expo-file-system';
 import { router } from 'expo-router';
 import { act, fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
 
@@ -53,9 +54,13 @@ it('mostra o indicador enquanto carrega e depois a lista com miniatura, data, Fa
   expect(screen.getByText(cafe.descricao).props.numberOfLines).toBe(2);
   const miniatura = screen.getAllByLabelText('Miniatura da imagem')[0];
   expect(miniatura.props.source).toEqual({
-    uri: 'http://api.teste/imagens/2/arquivo',
-    headers: { Authorization: 'Bearer tok' },
+    uri: expect.stringContaining('file:///cache/'),
   });
+  expect(File.downloadFileAsync).toHaveBeenCalledWith(
+    'http://api.teste/imagens/2/arquivo',
+    expect.anything(),
+    expect.objectContaining({ headers: { Authorization: 'Bearer tok' } }),
+  );
 });
 
 it('toque no cartão abre os detalhes da Imagem', async () => {

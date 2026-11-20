@@ -1,3 +1,4 @@
+import { File } from 'expo-file-system';
 import { Platform } from 'react-native';
 
 // Único módulo que fala com o backend. Nenhuma tela chama fetch diretamente.
@@ -15,10 +16,12 @@ export type RespostaAuth = { token: string; usuario: UsuarioApi };
 
 export class ErroApi extends Error {
   codigo: string;
+  detalhe?: string;
 
-  constructor(codigo: string, mensagem: string) {
+  constructor(codigo: string, mensagem: string, detalhe?: string) {
     super(mensagem);
     this.codigo = codigo;
+    this.detalhe = detalhe;
   }
 }
 
@@ -54,8 +57,11 @@ async function requisicao<T>(metodo: 'GET' | 'POST' | 'PUT' | 'DELETE', caminho:
       body: multipart ?? (corpo === undefined ? undefined : JSON.stringify(corpo)),
       signal: controle.signal,
     });
-  } catch {
-    throw controle.signal.aborted ? new ErroApi('TEMPO_ESGOTADO', MENSAGEM_TEMPO) : new ErroApi('SEM_CONEXAO', MENSAGEM_REDE);
+  } catch (e) {
+    // Diagnóstico: o erro real do fetch aparece no terminal do Expo e na tela de envio.
+    const detalhe = `${metodo} ${base}${caminho} -> ${String(e)}`;
+    console.warn('[api] falha de rede:', detalhe);
+    throw controle.signal.aborted ? new ErroApi('TEMPO_ESGOTADO', MENSAGEM_TEMPO, detalhe) : new ErroApi('SEM_CONEXAO', MENSAGEM_REDE, detalhe);
   } finally {
     clearTimeout(temporizador);
   }
@@ -97,8 +103,8 @@ export async function enviarImagem(foto: FotoParaEnviar) {
     // No navegador o arquivo é um Blob lido da uri.
     formulario.append('foto', await (await fetch(foto.uri)).blob(), foto.nome);
   } else {
-    // No React Native o arquivo é descrito por { uri, name, type }.
-    formulario.append('foto', { uri: foto.uri, name: foto.nome, type: foto.tipo } as unknown as Blob);
+    // No celular o fetch do Expo não aceita { uri, name, type }; o File do expo-file-system é suportado.
+    formulario.append('foto', new File(foto.uri) as unknown as Blob);
   }
   return requisicao<ImagemApi>('POST', '/imagens', { multipart: formulario, tempoMs: TEMPO_ENVIO_MS });
 }

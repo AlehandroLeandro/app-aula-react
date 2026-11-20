@@ -56,7 +56,7 @@ export default function EnviarScreen() {
       setImagem(criada);
       setEstado('concluido');
     } catch (e) {
-      setErro(e instanceof ErroApi ? e.message : 'Algo deu errado. Tente novamente.');
+      setErro(e instanceof ErroApi ? (e.detalhe ? `${e.message}\n${e.detalhe}` : e.message) : 'Algo deu errado. Tente novamente.');
       setEstado('escolhendo');
     }
   }
